@@ -4,8 +4,8 @@ open System
 open RightMove
 
 [<EntryPoint>]
-let main argv = 
-    let findings = getProperties "Brighton and Hove" 3 425000 |> Seq.map matcher
+let main _ = 
+    let findings = getProperties "Brighton and Hove" 3 425000 |> Seq.map categorise
 
     let printResult (r:PropertyAndType) =
         let s = match r with
@@ -31,7 +31,7 @@ let main argv =
         let totalReduced = getCountOfCat grouped  Reduced
         let totalNoIssue = getCountOfCat grouped  NoIssue
         let totalCurrentRental = getCountOfCat grouped  CurrentRental
-        let total = totalNoIssue + totalReduced + totalVacant
+        let total = totalNoIssue + totalReduced + totalVacant + totalCurrentRental
 
         printfn "Total Items: %d" total
         printfn "Vacant: %d (%f%%)" totalVacant <| Utils.toPercentage totalVacant total

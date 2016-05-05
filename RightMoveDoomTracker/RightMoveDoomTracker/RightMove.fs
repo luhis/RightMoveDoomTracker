@@ -63,15 +63,29 @@
     let vacantPhraises = ["no onward chain"; "no ongoing chain"; "vacant possession"; "chain free"]
     let letPhraises = ["is let"; "currently let"; "currently rented"; "PCM"; "rented out";  "holiday let"]
 
-    let matcher (property: RightMove.Property) =
+    let isReducedProperty (p:RightMove.Property) = 
+        match p.AddedOrReduced with
+        | Some added -> added.StartsWith("Reduced") 
+        | _ -> false
+
+    let isVacantProperty (p:RightMove.Property) =
+        containsAny vacantPhraises p.Summary
+
+    let isLetProperty (p:RightMove.Property) =
+        containsAny letPhraises p.Summary
+
+    let categorise (property:RightMove.Property) =
         match property with
-        | p when p.AddedOrReduced.IsSome && p.AddedOrReduced.Value.StartsWith("Reduced") -> (p, Reduced)
-        | p when containsAny vacantPhraises p.Summary -> (p, Vacant)
-        | p when containsAny letPhraises p.Summary -> (p, CurrentRental)
+        | p when isReducedProperty p -> (p, Reduced)
+        | p when isVacantProperty p -> (p, Vacant)
+        | p when isLetProperty p -> (p, CurrentRental)
         | p -> (p, NoIssue)
 
-    let findVacantSentance s =
-        splitIntoSentances s |> Seq.filter (fun a -> containsAny vacantPhraises a) |> Seq.head
+    let findSentence test =
+        splitIntoSentances >> Seq.filter test >> Seq.head
 
-    let findIsLetSentance s =
-        splitIntoSentances s |> Seq.filter (fun a -> containsAny letPhraises a) |> Seq.head
+    let findVacantSentance =
+        containsAny vacantPhraises |> findSentence
+
+    let findIsLetSentance =
+        containsAny letPhraises |> findSentence

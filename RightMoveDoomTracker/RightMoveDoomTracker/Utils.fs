@@ -16,9 +16,15 @@
         epoch.AddSeconds(float (millis/1000L))
 
     let split c (s:string) =
-        s.Split [|c|]
+        s.Split c
 
-    let splitIntoSentances = split '.'
+    let trim (s:string) =
+        s.Trim()
+
+    let splitIntoSentances = 
+        let sentenceDelimiters = [|'.'; '!'; '?'|]
+        let notEmpty = System.String.IsNullOrEmpty >> not
+        split sentenceDelimiters >> Seq.map trim >> Seq.filter notEmpty
 
     let toDateTime millis =
         match millis with

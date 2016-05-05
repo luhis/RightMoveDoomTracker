@@ -6,7 +6,6 @@
     type TypeAhead = JsonProvider<"http://www.rightmove.co.uk/typeAhead/uknostreet/BR/IG/HT/ON">
     type ItemType = 
     | Vacant
-    | OutOfTownAgent
     | Reduced
     | CurrentRental
     | NoIssue
@@ -15,18 +14,25 @@
 
     let generateUrl location minBedrooms maxPrice page = 
         let perPage = 48
-        "http://labs.rightmove.co.uk/api/_search?" + 
-        "locationIdentifier=" + location.ToString() + 
-        "&minBedrooms=" + minBedrooms.ToString() + 
-        "&maxPrice=" + maxPrice.ToString() + 
-        "&index=" + ((page-1) * perPage).ToString() +
-        "&numberOfPropertiesPerPage=" + perPage.ToString() +
-        "&radius=0.0&sortType=10&viewType=LIST&channel=BUY"
+        sprintf 
+            "http://labs.rightmove.co.uk/api/_search\
+            ?locationIdentifier=%s\
+            &minBedrooms=%d\
+            &maxPrice=%d\
+            &index=%d\
+            &numberOfPropertiesPerPage=%d\
+            &radius=0.0&sortType=10&viewType=LIST&channel=BUY" 
+            location
+            minBedrooms
+            maxPrice
+            ((page-1) * perPage)
+            perPage
 
     let generateTypeAheadLookupUrl (term:string) =
         let uppered = term.ToUpper()
         let searchPairs = uppered |> Seq.chunkBySize 2 |> Seq.map (fun a -> new string [|for c in a -> c|])
-        "http://www.rightmove.co.uk/typeAhead/uknostreet/" + String.concat "/" searchPairs
+        let pairsWithSlashes = String.concat "/" searchPairs
+        sprintf "http://www.rightmove.co.uk/typeAhead/uknostreet/%s" pairsWithSlashes
 
     let getLocation searchTerm =
         let lookupurl = generateTypeAheadLookupUrl searchTerm
@@ -59,7 +65,6 @@
 
     let matcher (property: RightMove.Property) =
         match property with
-        //| p when not <| startsWithAny areaCodesForRegion p.Customer.ContactTelephone -> (p, OutOfTownAgent)
         | p when p.AddedOrReduced.IsSome && p.AddedOrReduced.Value.StartsWith("Reduced") -> (p, Reduced)
         | p when containsAny vacantPhraises p.Summary -> (p, Vacant)
         | p when containsAny letPhraises p.Summary -> (p, CurrentRental)

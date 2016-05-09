@@ -10,7 +10,7 @@
     | CurrentRental
     | NoIssue
 
-    type PropertyAndType = (RightMove.Property * ItemType)
+    type PropertyAndType = RightMove.Property * ItemType
 
     let generateUrl location minBedrooms maxPrice page = 
         let perPage = 48
@@ -36,7 +36,7 @@
 
     let getLocation searchTerm =
         let lookupurl = generateTypeAheadLookupUrl searchTerm
-        let taItems = TypeAhead.Load(lookupurl)
+        let taItems = TypeAhead.Load lookupurl
 
         taItems.TypeAheadLocations |> 
         Seq.filter (fun a -> Utils.caseInsensitiveContains searchTerm a.NormalisedSearchTerm) |> 
@@ -46,17 +46,17 @@
         let location = getLocation locationString
         let pageLessUrl = generateUrl location.LocationIdentifier minBeds price
         let firstUrl = pageLessUrl 1
-        let loadedData = RightMove.Load(firstUrl)
+        let loadedData = RightMove.Load firstUrl
         let page1Properties = loadedData.Properties
         let total = loadedData.Pagination.Total
-        let pagesToFetch = {2 .. total}
         if total = 1 then
             page1Properties
         else
+            let pagesToFetch = {2 .. total}
             Seq.fold (fun acc i -> 
                             let url = pageLessUrl i
-                            let properties = RightMove.Load(url).Properties
-                            Array.append properties acc
+                            let data = RightMove.Load url
+                            Array.append data.Properties acc
                 ) page1Properties pagesToFetch
 
     
@@ -65,7 +65,7 @@
 
     let isReducedProperty (p:RightMove.Property) = 
         match p.AddedOrReduced with
-        | Some added -> added.StartsWith("Reduced") 
+        | Some added -> added.StartsWith "Reduced"
         | _ -> false
 
     let isVacantProperty (p:RightMove.Property) =
